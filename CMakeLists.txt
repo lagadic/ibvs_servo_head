@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(pbvs_arm_servo)
+project(ibvs_servo_head)
 
 # Tell CMake where to find "FindNAOqi.cmake"
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -45,7 +45,7 @@ catkin_package(
 #  include
   
   LIBRARIES
-  pbvs_arm_servo
+  ibvs_servo_head
   
   CATKIN_DEPENDS
   geometry_msgs
@@ -87,22 +87,15 @@ add_definitions(-DBOOST_FILESYSTEM_VERSION=3)
 add_definitions(${VISP_DEFINITIONS})
 
 # Declare a cpp library
-add_library(pbvs_arm_servo
-  include/pbvs_arm_servo.h
-  src/pbvs_arm_servo.cpp
+add_library(ibvs_servo_head
+  include/ibvs_servo_head.h
+  src/ibvs_servo_head.cpp
 )
 
 
 
 ## Specify libraries to link a library or executable target against
-#target_link_libraries(pbvs_arm_servo_node
-#  ${catkin_LIBRARIES}
-#  ${VISP_LIBRARIES}
-#  ${NAOqi_LIBRARIES}
-#  ${VISP_NAOQI_LIBRARIES}
-##  pbvs_arm
-#)
-target_link_libraries(pbvs_arm_servo
+target_link_libraries(ibvs_servo_head
   ${catkin_LIBRARIES}
   ${VISP_LIBRARIES}
   ${NAOqi_LIBRARIES}
@@ -111,15 +104,14 @@ target_link_libraries(pbvs_arm_servo
 )
 
 ## Declare a cpp executable
-#add_executable(pbvs_arm_servo_node src/pbvs_arm_servo.cpp)
-add_executable(pbvs_arm_main_node src/main.cpp)
+add_executable(ibvs_main_node src/main.cpp)
 
 
-  target_link_libraries(pbvs_arm_main_node
+  target_link_libraries(ibvs_main_node
     ${resource_retriever_LIBRARIES}
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
-    pbvs_arm_servo
+    ibvs_servo_head
     )
 
 

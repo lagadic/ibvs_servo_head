@@ -4,6 +4,7 @@
 #include <sensor_msgs/SetCameraInfo.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Point.h>
 #include <std_msgs/Int8.h>
 
 #include <visp3/core/vpHomogeneousMatrix.h>
@@ -19,20 +20,20 @@
 #include <visp_naoqi/vpNaoqiRobot.h>
 #include <visp_naoqi/vpNaoqiConfig.h>
 
-#include <vpServoArm.h>
+#include <vpServoHead.h>
 
-class pbvs_arm_servo
+class ibvs_servo_head
 {
 public:
 
-  pbvs_arm_servo(ros::NodeHandle &nh);
-  ~pbvs_arm_servo();
+  ibvs_servo_head(ros::NodeHandle &nh);
+  ~ibvs_servo_head();
   void computeControlLaw();
   void spin();
-  void getActualPoseCb(const geometry_msgs::PoseStampedConstPtr &msg);
-  void getDesiredPoseCb(const geometry_msgs::PoseStampedConstPtr &msg);
-  void getStatusPoseHandCb(const std_msgs::Int8::ConstPtr &status);
-  void getStatusPoseDesiredCb(const std_msgs::Int8::ConstPtr &status);
+  void getActualPointCb(const geometry_msgs::PointConstPtr &msg);
+  void getDesiredPointCb(const geometry_msgs::PointConstPtr &msg);
+  void getStatusPointHandCb(const std_msgs::Int8::ConstPtr &status);
+  void getStatusPointDesiredCb(const std_msgs::Int8::ConstPtr &status);
   void getRobotJoints();
   void publishCmdVel(const vpColVector &q);
 
@@ -41,7 +42,7 @@ protected:
 
   // Robot
   vpNaoqiRobot robot;
-  std::vector<std::string> m_jointNames_arm;
+  std::vector<std::string> m_jointNames_tot;
   int m_numJoints;
   std::string m_chain_name;
   vpColVector m_jointMin;
@@ -49,24 +50,24 @@ protected:
 
   // ROS
   ros::NodeHandle n;
-  std::string actualPoseTopicName;
-  std::string desiredPoseTopicName;
+  std::string actualPointTopicName;
+  std::string desiredPointTopicName;
   std::string statusPoseHandTopicName;
   std::string statusPoseDesiredTopicName;
   std::string cmdVelTopicName;
   std::string m_opt_arm;
-  ros::Subscriber actualPoseSub;
-  ros::Subscriber desiredPoseSub;
-  ros::Subscriber statusPoseHandSub;
-  ros::Subscriber statusPoseDesiredSub;
+  ros::Subscriber actualPointSub;
+  ros::Subscriber desiredPointSub;
+//  ros::Subscriber statusPointHandSub;
+//  ros::Subscriber statusPointDesiredSub;
   ros::Publisher cmdVelPub;
   int freq;
 
   // Messages
   sensor_msgs::JointState m_q_dot_msg;
 
-  //Servo Arm
-  vpServoArm m_servo_arm;
+  //Servo Head
+  vpServoHead m_servo_head;
   vpColVector m_q;
   vpColVector m_q_dot;
   vpColVector m_q2_dot;
@@ -75,13 +76,15 @@ protected:
   int m_statusPoseHand;
   int m_statusPoseDesired;
 
-  vpHomogeneousMatrix m_cMh;
-  vpHomogeneousMatrix m_cMdh;
+  vpImagePoint m_actualPoint;
+  vpImagePoint m_desiredPoint;
+//  vpHomogeneousMatrix m_cMh;
+//  vpHomogeneousMatrix m_cMdh;
   vpHomogeneousMatrix oMe_Arm;
 
   //conditions
   bool m_cMh_isInitialized;
   bool m_cMdh_isInitialized;
-  bool m_statusPoseDesired_isEnable;
+  bool m_trunk_isEnable;
 
 };

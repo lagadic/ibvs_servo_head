@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>pbvs_arm_servo</name>
+  <name>ibvs_servo_head</name>
   <version>0.0.1</version>
-  <description>The pbvs_arm_servo package</description>
+  <description>The ibvs_servo_head package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
