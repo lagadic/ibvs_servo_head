@@ -78,9 +78,10 @@ protected:
 
   vpImagePoint m_actualPoint;
   vpImagePoint m_desiredPoint;
-//  vpHomogeneousMatrix m_cMh;
+  vpHomogeneousMatrix m_eMc;
 //  vpHomogeneousMatrix m_cMdh;
   vpHomogeneousMatrix oMe_Arm;
+  vpMatrix m_MAP_head;
 
   //conditions
   bool m_cMh_isInitialized;

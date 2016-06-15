@@ -28,13 +28,6 @@ ibvs_servo_head::ibvs_servo_head(ros::NodeHandle &nh)
     n.param( "trunk_isEnable", m_trunk_isEnable, false );
 
     // Initialize subscriber and publisher
-//    if ( m_statusPoseDesired_isEnable )
-//    {
-//        n.param<std::string>("StatusPoseDesiredTopicName", statusPoseDesiredTopicName, "/visp_blobs_tracker/status2");
-//        statusPoseDesiredSub = n.subscribe ( statusPoseDesiredTopicName, 1, (boost::function < void(const std_msgs::Int8::ConstPtr  &)>) boost::bind( &ibvs_servo_head::getStatusPoseDesiredCb, this, _1 ));
-//    }
-//    else
-//        m_statusPoseDesired = 1;
 
     desiredPointSub = n.subscribe( desiredPointTopicName, 1, (boost::function < void(const geometry_msgs::PointConstPtr&)>) boost::bind( &ibvs_servo_head::getDesiredPointCb, this, _1 ));
     actualPointSub = n.subscribe( actualPointTopicName, 1, (boost::function < void(const geometry_msgs::PointConstPtr &)>) boost::bind( &ibvs_servo_head::getActualPointCb, this, _1 ));
@@ -45,17 +38,11 @@ ibvs_servo_head::ibvs_servo_head(ros::NodeHandle &nh)
 //        m_chain_name = "RArm";
 //    else
     m_chain_name = "Head";
-
-    std::string filename_transform = std::string(ROMEOTK_DATA_FOLDER) + "/transformation.xml";
-    std::string name_transform = "qrcode_M_e_" + m_chain_name;
-    vpXmlParserHomogeneousMatrix pm; // Create a XML parser
-
-    if (pm.parse(oMe_Arm, filename_transform, name_transform) != vpXmlParserHomogeneousMatrix::SEQUENCE_OK) {
-        std::cout << "Cannot found the homogeneous matrix named " << name_transform << "." << std::endl;
-        ros::shutdown();
-    }
-    else
-        std::cout << "Homogeneous matrix " << name_transform <<": " << std::endl << oMe_Arm << std::endl;
+    vpNaoqiGrabber g;
+    g.setFramerate(15);
+    g.setCamera(2); // CameraLeftEye
+    g.open();
+    m_eMc = g.get_eMc(vpCameraParameters::perspectiveProjWithDistortion,"CameraLeftEye");
 
     ROS_INFO("Launch NaoqiRobotros node");
     robot.open();
@@ -77,11 +64,11 @@ ibvs_servo_head::ibvs_servo_head(ros::NodeHandle &nh)
 
     std::cout << m_jointNames_tot << std::endl;
 
-    vpMatrix MAP_head(7,6);
+    m_MAP_head.resize(7,6);
     for (unsigned int i = 0; i < 4 ; i++)
-      MAP_head[i][i]= 1;
-    MAP_head[5][4]= 1;
-    MAP_head[6][5]= 1;
+      m_MAP_head[i][i]= 1;
+    m_MAP_head[5][4]= 1;
+    m_MAP_head[6][5]= 1;
 
 
     m_numJoints = m_jointNames_tot.size();
@@ -94,7 +81,16 @@ ibvs_servo_head::ibvs_servo_head(ros::NodeHandle &nh)
     m_jointMax.resize(m_numJoints);
 
     //Get joint limits
-    robot.getJointMinAndMax(m_jointNames_tot, m_jointMin, m_jointMax);
+    robot.getJointMinAndMax(jointNames, m_jointMin, m_jointMax);
+    m_jointMin[0]=vpMath::rad(-16.8);
+    m_jointMin[jointNames.size()-2]=vpMath::rad(-16.8);
+    m_jointMin[jointNames.size()-1]=vpMath::rad(-14.8);
+
+    m_jointMax[jointNames.size()-2]= vpMath::rad(17.2);
+    m_jointMax[jointNames.size()-1]= vpMath::rad(15.3);
+
+    std::cout << "limit max:" << m_jointMax << std::endl;
+    std::cout << "limit min:" << m_jointMin << std::endl;
 
     //Set the stiffness
     robot.setStiffness(m_jointNames_tot, 1.f);
@@ -133,9 +129,8 @@ void ibvs_servo_head::computeControlLaw()
         m_servo_head.setCurrentFeature(m_actualPoint ) ;
         m_servo_head.setDesiredFeature(m_desiredPoint ) ;
         // Create twist matrix from target Frame to Arm end-effector (WristPitch)
-        vpVelocityTwistMatrix oVe_LArm(oMe_Arm);
-        m_servo_head.set_eJe(robot.get_eJe(m_chain_name));  //// ???????
-        m_servo_head.set_cVe(oVe_LArm);                     //// ???????
+        m_servo_head.set_eJe( robot.get_eJe("LEye_t")* m_MAP_head );
+        m_servo_head.set_cVe( vpVelocityTwistMatrix(m_eMc.inverse()) );
 
         //Compute velocities PBVS task
         m_q_dot = - m_servo_head.computeControlLaw(vpTime::measureTimeSecond() - m_servo_time_init);
