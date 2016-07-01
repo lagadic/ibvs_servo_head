@@ -5,6 +5,7 @@
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/PointStamped.h>
 #include <std_msgs/Int8.h>
 
 #include <visp3/core/vpHomogeneousMatrix.h>
@@ -30,10 +31,11 @@ public:
   ~ibvs_servo_head();
   void computeControlLaw();
   void spin();
-  void getActualPointCb(const geometry_msgs::PointConstPtr &msg);
-  void getDesiredPointCb(const geometry_msgs::PointConstPtr &msg);
-  void getStatusPointHandCb(const std_msgs::Int8::ConstPtr &status);
+  void getActualPointCb(const geometry_msgs::PointStampedConstPtr &msg);
+  void getDesiredPointCb(const geometry_msgs::PointStampedConstPtr &msg);
+  void getStatusPointActualCb(const std_msgs::Int8::ConstPtr &status);
   void getStatusPointDesiredCb(const std_msgs::Int8::ConstPtr &status);
+  void setupCameraParameterCb(const sensor_msgs::CameraInfo::ConstPtr &cam);
   void getRobotJoints();
   void publishCmdVel(const vpColVector &q);
 
@@ -43,6 +45,7 @@ protected:
   // Robot
   vpNaoqiRobot robot;
   std::vector<std::string> m_jointNames_tot;
+  std::vector<std::string> m_jointNames;
   int m_numJoints;
   std::string m_chain_name;
   vpColVector m_jointMin;
@@ -52,14 +55,15 @@ protected:
   ros::NodeHandle n;
   std::string actualPointTopicName;
   std::string desiredPointTopicName;
-  std::string statusPoseHandTopicName;
-  std::string statusPoseDesiredTopicName;
+  std::string statusPointActualTopicName;
+  std::string statusPointDesiredTopicName;
+  std::string cameraParameterTopicName;
   std::string cmdVelTopicName;
   std::string m_opt_arm;
   ros::Subscriber actualPointSub;
   ros::Subscriber desiredPointSub;
-//  ros::Subscriber statusPointHandSub;
-//  ros::Subscriber statusPointDesiredSub;
+  ros::Subscriber cameraParameterSub;
+  ros::Subscriber statusPointActualSub;
   ros::Publisher cmdVelPub;
   int freq;
 
@@ -73,8 +77,8 @@ protected:
   vpColVector m_q2_dot;
 
   double m_servo_time_init;
-  int m_statusPoseHand;
-  int m_statusPoseDesired;
+  int m_statusPointActual;
+  int m_statusPointDesired;
 
   vpImagePoint m_actualPoint;
   vpImagePoint m_desiredPoint;
@@ -82,10 +86,14 @@ protected:
 //  vpHomogeneousMatrix m_cMdh;
   vpHomogeneousMatrix oMe_Arm;
   vpMatrix m_MAP_head;
+  vpCameraParameters m_cam_param;
 
   //conditions
-  bool m_cMh_isInitialized;
-  bool m_cMdh_isInitialized;
+  bool m_actualPoint_isInitialized;
+  bool m_desiredPoint_isInitialized;
   bool m_trunk_isEnable;
+  bool m_desired_point_enable;
+  bool m_cam_is_initialized;
+  bool m_use_realsense_rgb;
 
 };

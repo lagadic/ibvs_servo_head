@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node name="ibvs_servo_head" pkg="ibvs_servo_head" type="ibvs_main_node" output="screen">
+<!--       <rosparam file="$(find visp_naoqi_ros)/config/robot_config.yaml" command="load"/> -->
+    <param name="cmdVelTopicName" value="/robot/controls/joint_states" />
+    <param name="actualPointTopicName" value="/visp_blobs_tracker/object_cog" />
+    <param name="desiredPointTopicName" value="/visp_blobs_tracker/object_des_position" />
+    <param name="statusPointActualTopicName" value="/visp_blobs_tracker/status" />
+    <param name="cameraParameterTopicName" value="/camera/camera_info" />
+
+  </node>
+
+
+</launch>
